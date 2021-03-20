@@ -12,7 +12,7 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 #include "any.h"
 
 #include "object.h"
@@ -82,9 +82,9 @@ namespace mildew
     bool ScriptAny::operator<(const ScriptAny& other) const
     {
         if(type_ == Type::UNDEFINED)
-            return true;
+            return other.type_ >= Type::UNDEFINED;
         if(type_ == Type::NULL_)
-            return true;
+            return other.type_ >= Type::NULL_;
         if(IsNumber() && !other.IsNumber())
             return true;
         else if(!IsNumber() && other.IsNumber())
@@ -99,6 +99,8 @@ namespace mildew
 
         if(type_ != other.type_)
             return type_ < other.type_;
+        
+        return false;
     }
 
     size_t ScriptAny::GetHash() const

@@ -15,7 +15,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "object.h"
 
-namespace mildew 
+namespace cpp 
 {
 std::unordered_map<const std::type_info*, std::vector<RTTINode*>> Object::hierarchy_;
 
@@ -45,4 +45,4 @@ int Object::SearchTree(const std::type_info& derived_t, const std::type_info& ba
     return -1;
 }
 
-}
+} // namespace cpp

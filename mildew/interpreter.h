@@ -13,30 +13,31 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include <iostream>
-#include "mildew/interpreter.h"
+#pragma once
 
-/**
- * Implements a basic REPL that lists tokens of script input
- */
-int main()
+#include <string>
+#include <vector>
+
+#include "types/any.h"
+
+namespace mildew
 {
-    std::string input;
-    mildew::Interpreter interpreter;
-    while(true)
+
+    class Interpreter
     {
-        std::cout << "mildew> ";
-        std::getline(std::cin, input);
-        if(input == "" || input == "#exit")
-            break;
-        interpreter.Evaluate(input, "<repl>");
-        if(interpreter.HasErrors())
-        {
-            for(const auto& error : interpreter.errors())
-                std::cerr << error << std::endl;
-            continue;
-        }
-        std::cout << "Successful tokenize" << std::endl;
-    }
-    return 0;
-}
+    public:
+        Interpreter() {}
+        Interpreter(const Interpreter& i) = delete;
+        ~Interpreter() {}
+
+        ScriptAny Evaluate(const std::string& code, const std::string& name = "<program>");
+        bool HasErrors() const { return errors_.size() != 0; }
+
+        Interpreter& operator=(const Interpreter& i) = delete;
+
+        const std::vector<std::string>& errors() const { return errors_; }
+    private:
+        std::vector<std::string> errors_;
+    };
+
+} // namespace mildew

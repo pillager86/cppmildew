@@ -51,6 +51,9 @@ namespace mildew
         for(size_t i = 0; i < arg_list.size(); ++i)
         {
             output += arg_list[i];
+            const auto kDefArgIndex = i - (arg_list.size() - default_arguments.size());
+            if(default_arguments.size() && kDefArgIndex < default_arguments.size())
+                output += '=' + default_arguments[kDefArgIndex]->to_string();
             if(i < arg_list.size() - 1)
                 output += ", ";
         }
@@ -72,6 +75,9 @@ namespace mildew
         for(size_t i = 0; i < argument_list.size(); ++i)
         {
             result += argument_list[i];
+            const auto kDefArgIndex = i - (argument_list.size() - default_arguments.size());
+            if(default_arguments.size() && kDefArgIndex < default_arguments.size())
+                result += '=' + default_arguments[kDefArgIndex]->to_string();
             if(i < argument_list.size() - 1)
                 result += ", ";
         }
@@ -279,5 +285,219 @@ namespace mildew
     std::string YieldNode::to_string() const
     {
         return "yield " + (yield_expression_node ? yield_expression_node->to_string() : "");
+    }
+
+    std::ostream& operator<<(std::ostream& os, const StatementNode& node)
+    {
+        os << node.to_string();
+        return os;
+    }
+
+    std::any VarDeclarationStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitVarDeclarationStatementNode(*this);
+    }
+
+    std::string VarDeclarationStatementNode::to_string() const
+    {
+        std::string result = qualifier_token.text + ' ';
+        for(size_t i = 0; i < assignment_nodes.size(); ++i)
+        {
+            result += assignment_nodes[i]->to_string();
+            if(i < assignment_nodes.size() - 1)
+                result += ", ";
+        }
+        result += ';';
+        return result;
+    }
+
+    std::any BlockStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitBlockStatementNode(*this);
+    }
+
+    std::string BlockStatementNode::to_string() const
+    {
+        std::string result = "{\n";
+        for(const auto& stmt : statement_nodes)
+            result += stmt->to_string() + "\n";
+        result += '}';
+        return result;
+    }
+
+    std::any IfStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitIfStatementNode(*this);
+    }
+
+    std::string IfStatementNode::to_string() const
+    {
+        std::string result = "if(" + condition_node->to_string() + ") " + on_true_statement->to_string();
+        if(on_false_statement)
+            result += " else " + on_false_statement->to_string();
+        return result;
+    }
+
+    std::any SwitchStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitSwitchStatementNode(*this);
+    }
+
+    std::string SwitchStatementNode::to_string() const
+    {
+        // TODO complete
+        return "switch(" + expression_node->to_string() + "){...}";
+    }
+
+    std::any WhileStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitWhileStatementNode(*this);
+    }
+
+    std::string WhileStatementNode::to_string() const
+    {
+        return ((label == "")? "" : (label + ": ")) + "while(" + condition_node->to_string() + ") " 
+            + body_node->to_string();
+    }
+
+    std::any DoWhileStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitDoWhileStatementNode(*this);
+    }
+
+    std::string DoWhileStatementNode::to_string() const
+    {
+        return ((label == "") ? "" : (label + ": ")) + "do " + body_node->to_string() + " while("
+            + condition_node->to_string() + ");";
+    }
+
+    std::any ForStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitForStatementNode(*this);
+    }
+
+    std::string ForStatementNode::to_string() const
+    {
+        return ((label == "") ? "" : (label + ": ")) + "for(" + (init_statement? init_statement->to_string(): "")
+            + "; " + (condition_node? condition_node->to_string(): "") + "; "
+            + (increment_node? increment_node->to_string(): "") + ") " + body_node->to_string();
+    }
+
+    std::any ForOfStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitForOfStatementNode(*this);
+    }
+
+    std::string ForOfStatementNode::to_string() const
+    {
+        std::string result = ((label == "") ? "" : (label + ": ")) + "for(" + qualifier_token.text + ' ';
+        for(size_t i = 0; i < var_access_nodes.size(); ++i)
+        {
+            result += var_access_nodes[i]->to_string();
+            if(i < var_access_nodes.size() - 1)
+                result += ", ";
+        }
+        result += ' ' + of_in_token.text + object_to_iterate->to_string() + ") " + body_node->to_string();
+        return result;
+    }
+
+    std::any BreakOrContinueStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitBreakOrContinueStatementNode(*this);
+    }
+
+    std::string BreakOrContinueStatementNode::to_string() const
+    {
+        return break_or_continue.text + ((label == "") ? "": (" " + label)) + ';';
+    }
+
+    std::any ReturnStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitReturnStatementNode(*this);
+    }
+
+    std::string ReturnStatementNode::to_string() const
+    {
+        return "return" + (expression_node? (" " + expression_node->to_string()): "") + ";";
+    }
+
+    std::any FunctionDeclarationStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitFunctionDeclarationStatementNode(*this);
+    }
+
+    std::string FunctionDeclarationStatementNode::to_string() const
+    {
+        std::string result = "function " + name + "(";
+        for(size_t i = 0; i < argument_names.size(); ++i)
+        {
+            result += argument_names[i];
+            const auto kDefArgIndex = i - (argument_names.size() - default_arguments.size());
+            if(default_arguments.size() && kDefArgIndex < default_arguments.size())
+                result += '=' + default_arguments[kDefArgIndex]->to_string();
+            if(i < argument_names.size() - 1)
+                result += ", "; 
+        }
+        result += ") {\n";
+        for(const auto& stmt : statement_nodes)
+            result += stmt->to_string() + "\n";
+        result += "}";
+        return result;
+    }
+
+    std::any ThrowStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitThrowStatementNode(*this);
+    }
+
+    std::string ThrowStatementNode::to_string() const
+    {
+        return "throw " + expression_node->to_string() + ";";
+    }
+
+    std::any TryBlockStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitTryBlockStatementNode(*this);
+    }
+
+    std::string TryBlockStatementNode::to_string() const
+    {
+        return "try " + try_block_node->to_string() 
+            + (catch_block_node? ("catch(" + exception_name + ")" + catch_block_node->to_string()): "")
+            + (finally_block_node? ("finally " + finally_block_node->to_string()): "")
+            + ';';
+    }
+
+    std::any DeleteStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitDeleteStatementNode(*this);
+    }
+
+    std::string DeleteStatementNode::to_string() const
+    {
+        return "delete " + access_node->to_string() + ';';
+    }
+
+    std::any ClassDeclarationStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitClassDeclarationStatementNode(*this);
+    }
+
+    std::string ClassDeclarationStatementNode::to_string() const
+    {
+        return class_definition->to_string();
+    }
+
+    std::any ExpressionStatementNode::Accept(IStatementVisitor& visitor) const
+    {
+        return visitor.VisitExpressionStatementNode(*this);
+    }
+
+    std::string ExpressionStatementNode::to_string() const
+    {
+        if(expression_node)
+            return expression_node->to_string() + ';';
+        else 
+            return "<empty expression statement>;"; // for debugging
     }
 }

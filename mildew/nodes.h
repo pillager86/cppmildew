@@ -264,7 +264,7 @@ namespace mildew
         std::string to_string() const override;
 
         const std::shared_ptr<ExpressionNode> function_to_call;
-        const std::vector<std::shared_ptr<ExpressionNode>>& argument_nodes;
+        const std::vector<std::shared_ptr<ExpressionNode>> argument_nodes;
         const bool return_this;
     };
 
@@ -354,6 +354,8 @@ namespace mildew
 
         const size_t line;
     };
+
+    std::ostream& operator<<(std::ostream& os, const StatementNode& node);
 
     class VarDeclarationStatementNode : public StatementNode
     {
@@ -576,6 +578,7 @@ namespace mildew
 
         const std::shared_ptr<StatementNode> try_block_node;
         const std::string exception_name;
+        // parser should validate that at least one of these is non-null
         const std::shared_ptr<StatementNode> catch_block_node;
         const std::shared_ptr<StatementNode> finally_block_node;
     };

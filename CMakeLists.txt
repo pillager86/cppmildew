@@ -3,15 +3,20 @@ project(cppmildew)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -g -O0")
 enable_testing()
+# find_package(Boost REQUIRED COMPONENTS fiber)
 add_library(${PROJECT_NAME} 
-    "mildew/cpp/object.cpp"
-    "mildew/cpp/utf.cpp"
+    "cpp/object.cpp"
+    "cpp/utf.cpp"
+    "mildew/environment.cpp"
+    "mildew/interpreter.cpp"
     "mildew/lexer.cpp"
     "mildew/nodes.cpp"
+    "mildew/parser.cpp"
     "mildew/types/any.cpp"
     "mildew/types/object.cpp"
     "mildew/util/regex.cpp"
 )
+# target_link_libraries(${PROJECT_NAME} PUBLIC Boost::fiber)
 add_subdirectory(run)
 add_subdirectory("ext/googletest")
 add_subdirectory(tests)

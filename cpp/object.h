@@ -16,13 +16,14 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include <functional>
+#include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
 
 #include <iostream>
 
-namespace mildew
+namespace cpp
 {
 
 class RTTINode
@@ -53,6 +54,11 @@ public:
     : ptr_(p), type_(t), destructor_(destructor)
     {}
 
+    template<class C>
+    Object(C* ptr)
+    : ptr_(ptr), type_(typeid(C)), destructor_([ptr] { delete ptr; })
+    {}
+
     Object(const Object&) = delete;
     Object& operator=(const Object &) = delete;
 
@@ -78,35 +84,39 @@ public:
     static void RegisterClassParent()
     {
         std::cout << "Registering class " << typeid(C).name() << std::endl;
+        using BaseClass = std::remove_cv_t<C>;
+        using ParentClass = std::remove_cv_t<Parent>;
         if(hierarchy_.count(&typeid(C)) == 0)
         {
             auto new_vector = std::vector<RTTINode*>();
-            auto node = new RTTINode(typeid(Parent));
-            node->SetDiff<C, Parent>();
+            auto node = new RTTINode(typeid(ParentClass));
+            node->SetDiff<BaseClass, ParentClass>();
             new_vector.emplace_back(node);
-            hierarchy_[&typeid(C)] = new_vector;
+            hierarchy_[&typeid(BaseClass)] = new_vector;
         }
         else // have to add to existing vector 
         {
             // auto parent_list = hierarchy_[&typeid(C)];
-            auto node = new RTTINode(typeid(Parent));
-            node->SetDiff<C, Parent>();
-            hierarchy_[&typeid(C)].emplace_back(node);
+            auto node = new RTTINode(typeid(ParentClass));
+            node->SetDiff<BaseClass, ParentClass>();
+            hierarchy_[&typeid(BaseClass)].emplace_back(node);
         } 
     }
 
     template<class C> // no parent
     static void RegisterClassNoParent()
     {
-        std::cout << "Registering parentless class " << typeid(C).name() << std::endl;
-        if(hierarchy_.count(&typeid(C)) > 0)
+        using BaseClass = std::remove_cv_t<C>;
+        std::cout << "Registering parentless class " << typeid(BaseClass).name() << std::endl;
+        if(hierarchy_.count(&typeid(BaseClass)) > 0)
             return; // nothing to do
-        hierarchy_[&typeid(C)] = std::vector<RTTINode*>();
+        hierarchy_[&typeid(BaseClass)] = std::vector<RTTINode*>();
     }
 
     template<class Base>
     Base* Cast()
     {
+        // using RegisteredClass = std::remove_cv_t<Base>; // TODO fix: this is busted
         if(typeid(Base).hash_code() == type_.hash_code())
             return reinterpret_cast<Base*>(ptr_); // nothing else to do already same type
         // is this a valid upcast?
@@ -133,4 +143,4 @@ Object* MakeObject(Args... args)
     return new Object(c, typeid(C), [c] { delete c; });
 }
 
-}
+} // namespace cpp

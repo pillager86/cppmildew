@@ -17,7 +17,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <cctype>
 
-#include "cpp/utf.h"
+#include "../cpp/utf.h"
 #include "util/regex.h"
 
 namespace mildew
@@ -353,6 +353,7 @@ namespace mildew
             }
             AdvanceChar();
         }
+        tokens.emplace_back(Token(Token::Type::EOF_));
         return tokens;
     }
 
@@ -818,7 +819,7 @@ namespace mildew
                     --index_;
                     try 
                     {
-                        text += EncodeChar32(std::stoi(accum, nullptr, 16));
+                        text += cpp::EncodeChar32(std::stoi(accum, nullptr, 16));
                     }
                     catch(const std::exception&)
                     {

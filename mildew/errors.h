@@ -12,15 +12,29 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 #pragma once
-#include <type_traits>
+
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace mildew
 {
-    /**
-     * This helper template allows static_asserts to be used at the end of an if constexpr else chain
-     */
-    template<typename T>
-    struct dependent_false : std::false_type {};
-}
+    class ScriptCompileError : public std::logic_error
+    {
+    public:
+        ScriptCompileError(const std::string& msg)
+        : std::logic_error(msg) 
+        {}
+    };
+
+    class UnimplementedError : public std::runtime_error
+    {
+    public:
+        UnimplementedError(const std::string& feature)
+        : std::runtime_error("This feature is unimplemented: " + feature)
+        {}
+    };
+
+} // namespace mildew

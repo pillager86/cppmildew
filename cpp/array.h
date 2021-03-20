@@ -19,7 +19,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 #include <type_traits>
 
-namespace mildew
+namespace cpp
 {
 
 inline size_t NextPowerOf2(const size_t n)
@@ -130,7 +130,7 @@ private:
 };
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const mildew::Array<T>& array)
+std::ostream& operator<<(std::ostream& os, const cpp::Array<T>& array)
 {
     if constexpr(Array<T>::is_utf8string)
     {
@@ -151,4 +151,4 @@ std::ostream& operator<<(std::ostream& os, const mildew::Array<T>& array)
     return os;
 }
 
-}
+} // namespace cpp

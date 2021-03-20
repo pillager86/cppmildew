@@ -20,7 +20,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <ostream>
 #include <type_traits>
 
-#include "../cpp/templates.h"
+#include "../../cpp/templates.h"
 
 namespace mildew
 {
@@ -84,6 +84,7 @@ namespace mildew
                 // TODO helper functions for string and array and function
                 case Type::OBJECT: return as_object_.get() != nullptr;
                 }
+                return static_cast<T>(false);
             }
             else if constexpr(std::is_integral_v<T> || std::is_floating_point_v<T>)
             {
@@ -95,6 +96,7 @@ namespace mildew
                 case Type::DOUBLE: return static_cast<T>(as_double_);
                 case Type::OBJECT: return static_cast<T>(0);
                 }
+                return static_cast<T>(0);
             }
             else if constexpr(std::is_same_v<ScriptObject, std::remove_cv_t<T>>)
             {
@@ -105,7 +107,7 @@ namespace mildew
             }
             else 
             {
-                static_assert(dependent_false<T>::value, "Unable to convert type");
+                static_assert(cpp::dependent_false<T>::value, "Unable to convert type");
             }
         }
 
@@ -150,7 +152,7 @@ namespace mildew
             }
             else
             {
-                static_assert(dependent_false<T>::value, "Invalid type specified");
+                static_assert(cpp::dependent_false<T>::value, "Invalid type specified");
             }
         }
 

@@ -15,11 +15,9 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #pragma once
 
-#include <iostream>
 #include <string>
-#include "array.h"
 
-namespace mildew
+namespace cpp
 {
-    using UTF8String = Array<char>;
+    std::string EncodeChar32(const char32_t dc);
 }
