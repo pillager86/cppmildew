@@ -12,7 +12,7 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 #pragma once
 
 #include <memory>
@@ -20,15 +20,15 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <unordered_map>
 
-#include "../../cpp/object.h"
-#include "any.h"
+#include "../../cppd/object.hpp"
+#include "any.hpp"
 
 namespace mildew
 {
     class ScriptObject
     {
     public:
-        ScriptObject(const std::string& type, std::shared_ptr<ScriptObject> proto, cpp::Object* native = nullptr);
+        ScriptObject(const std::string& type, std::shared_ptr<ScriptObject> proto, cppd::Object* native = nullptr);
         ScriptObject(const std::string& type);
         ScriptObject(const ScriptObject&) = delete;
         virtual ~ScriptObject();
@@ -38,8 +38,8 @@ namespace mildew
         const std::string& name() const { return name_; }
         std::shared_ptr<ScriptObject> prototype() { return prototype_; }
         void prototype(std::shared_ptr<ScriptObject> proto) { prototype_ = proto; }
-        cpp::Object* native_object() const { return native_object_; }
-        void native_object(cpp::Object* obj);
+        cppd::Object* native_object() const { return native_object_; }
+        void native_object(cppd::Object* obj);
 
         void AssignField(const std::string& name, const ScriptAny& value);
         virtual size_t GetHash() const;
@@ -59,7 +59,7 @@ namespace mildew
         
         std::string name_;
         std::shared_ptr<ScriptObject> prototype_;
-        cpp::Object* native_object_;
+        cppd::Object* native_object_;
     };
 
     std::ostream& operator<<(std::ostream& os, const ScriptObject& obj);

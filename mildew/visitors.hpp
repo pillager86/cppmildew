@@ -17,7 +17,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <any>
 
-#include "nodes.h"
+#include "nodes.hpp"
 
 namespace mildew
 {

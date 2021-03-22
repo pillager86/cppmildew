@@ -13,9 +13,12 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "any.h"
+#include "any.hpp"
 
-#include "object.h"
+#include "object.hpp"
+#include "array.hpp"
+#include "function.hpp"
+#include "string.hpp"
 
 namespace mildew
 {
@@ -36,15 +39,33 @@ namespace mildew
             SetValue(other.as_double_);
             break;
         case Type::OBJECT:
+        case Type::ARRAY:
+        case Type::FUNCTION:
+        case Type::STRING:
             SetValue(other.as_object_);
             break;
         }
         type_ = other.type_;
     }
 
+    ScriptAny::ScriptAny(const std::string& str)
+    {
+        DestructObject();
+        type_ = Type::STRING;
+        new (&as_object_) std::shared_ptr<ScriptString>(new ScriptString(str));
+    }
+
     ScriptAny::~ScriptAny()
     {
         DestructObject();
+    }
+
+    ScriptAny& ScriptAny::operator=(const std::string& str)
+    {
+        DestructObject();
+        type_ = Type::STRING;
+        new (&as_object_) std::shared_ptr<ScriptString>(new ScriptString(str));
+        return *this;
     }
 
     bool ScriptAny::operator==(const ScriptAny& other) const
@@ -60,7 +81,10 @@ namespace mildew
         if(type_ == Type::NULL_ || other.type_ == Type::NULL_)
             return false;
 
-        // TODO string
+        if(type_ == Type::STRING || other.type_ == Type::STRING)
+        {
+            return ToUTF8String() == other.ToUTF8String();
+        }
         
         if(IsNumber() && other.IsNumber())
         {
@@ -69,9 +93,16 @@ namespace mildew
             return ToValue<std::int64_t>() == other.ToValue<std::int64_t>();
         }
 
-        // TODO array
+        if(type_ == Type::ARRAY && other.type_ == Type::ARRAY)
+        {
+            auto a = std::dynamic_pointer_cast<ScriptArray>(as_object_);
+            auto b = std::dynamic_pointer_cast<ScriptArray>(other.as_object_);
+            return *a == *b;
+        }
 
-        // TODO function
+        if(type_ == Type::FUNCTION && other.type_ == Type::FUNCTION)
+            return *std::dynamic_pointer_cast<ScriptFunction>(as_object_)
+                == *std::dynamic_pointer_cast<ScriptFunction>(other.as_object_);
 
         if(type_ != other.type_)
             return false;
@@ -91,9 +122,21 @@ namespace mildew
             return false;
         else if(IsNumber() && other.IsNumber())
             return ToValue<double>() < other.ToValue<double>();
-        // handle string
-        // handle array
-        // handle function
+        else if(type_ == Type::STRING || other.type_ == Type::STRING)
+        {
+            return ToUTF8String() < other.ToUTF8String();
+        }
+        else if(type_ == Type::ARRAY && other.type_ == Type::ARRAY)
+        {
+            auto a = std::dynamic_pointer_cast<ScriptArray>(as_object_);
+            auto b = std::dynamic_pointer_cast<ScriptArray>(other.as_object_);
+            return *a < *b;
+        }
+        else if(type_ == Type::FUNCTION && other.type_ == Type::FUNCTION)
+        {
+            return *std::dynamic_pointer_cast<ScriptFunction>(as_object_)
+                < *std::dynamic_pointer_cast<ScriptFunction>(as_object_);
+        }
         if(IsObject() && other.IsObject())
             return *as_object_ < *(other.as_object_);
 
@@ -112,7 +155,11 @@ namespace mildew
         case Type::BOOLEAN: return std::hash<bool>()(as_boolean_);
         case Type::INTEGER: return std::hash<std::int64_t>()(as_integer_);
         case Type::DOUBLE: return std::hash<double>()(as_double_);
-        case Type::OBJECT: return as_object_->GetHash();
+        case Type::OBJECT: 
+        case Type::ARRAY:
+        case Type::FUNCTION:
+        case Type::STRING:
+            return as_object_->GetHash();
         }
         return -1;
     }
@@ -129,13 +176,49 @@ namespace mildew
 
     bool ScriptAny::IsObject() const
     {
-        return type_ == Type::OBJECT; // more later
+        return type_ == Type::OBJECT 
+            || type_ == Type::ARRAY
+            || type_ == Type::FUNCTION
+            || type_ == Type::STRING;
     }
 
     void ScriptAny::DestructObject()
     {
         if(IsObject())
             as_object_.~shared_ptr<ScriptObject>();
+    }
+
+    std::string ScriptAny::ToString() const
+    {
+        std::ostringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+
+    cppd::UTF8String ScriptAny::ToUTF8String() const
+    {
+        switch(type_)
+        {
+        case Type::UNDEFINED:
+            return cppd::UTF8String("undefined");
+        case Type::NULL_:
+            return cppd::UTF8String("null");
+        case Type::BOOLEAN:
+            return cppd::UTF8String(as_boolean_? "true" : "false");
+        case Type::INTEGER:
+            return cppd::ToUTF8String(as_integer_);
+        case Type::DOUBLE:
+            return cppd::ToUTF8String(as_double_);
+        case Type::OBJECT:
+        case Type::ARRAY:
+            return cppd::ToUTF8String(ToString());
+        case Type::FUNCTION:
+            return cppd::ToUTF8String(ToString());
+        case Type::STRING:
+            return std::dynamic_pointer_cast<ScriptString>(as_object_)->str;
+        default:
+            return cppd::ToUTF8String("<invalid ScriptAny type>");
+        }
     }
 
     std::ostream& operator<<(std::ostream& os, const ScriptAny& any)
@@ -158,7 +241,16 @@ namespace mildew
                 os << any.as_double_;
                 break;
             case ScriptAny::Type::OBJECT:
-                os << any.as_object_;
+                os << *any.as_object_;
+                break;
+            case ScriptAny::Type::ARRAY:
+                os << *std::dynamic_pointer_cast<ScriptArray>(any.as_object_);
+                break;
+            case ScriptAny::Type::FUNCTION:
+                os << *std::dynamic_pointer_cast<ScriptFunction>(any.as_object_);
+                break;
+            case ScriptAny::Type::STRING:
+                os << *std::dynamic_pointer_cast<ScriptString>(any.as_object_);
                 break;
             default:
                 os << "<Unknown ScriptAny type>";

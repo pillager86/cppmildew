@@ -13,11 +13,11 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "nodes.h"
+#include "nodes.hpp"
 
 #include <sstream>
 
-#include "visitors.h"
+#include "visitors.hpp"
 
 namespace mildew
 {

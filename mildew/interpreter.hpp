@@ -12,22 +12,32 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-#include "utf.h"
+*/
+#pragma once
 
-#include <codecvt>
-#include <locale>
+#include <string>
+#include <vector>
 
-namespace cpp
+#include "types/any.hpp"
+
+namespace mildew
 {
-    /**
-     * Encodes a 4-byte character as a utf8 string
-     * @param dc A 4-byte unicode character
-     * @returns A standard string with the encoded character
-     */
-    std::string EncodeChar32(const char32_t dc)
+
+    class Interpreter
     {
-        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-        return conv.to_bytes(std::u32string( {dc} ));
-    }
-}
+    public:
+        Interpreter() {}
+        Interpreter(const Interpreter& i) = delete;
+        ~Interpreter() {}
+
+        ScriptAny Evaluate(const std::string& code, const std::string& name = "<program>");
+        bool HasErrors() const { return errors_.size() != 0; }
+
+        Interpreter& operator=(const Interpreter& i) = delete;
+
+        const std::vector<std::string>& errors() const { return errors_; }
+    private:
+        std::vector<std::string> errors_;
+    };
+
+} // namespace mildew

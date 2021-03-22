@@ -23,7 +23,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <iostream>
 
-namespace cpp
+namespace cppd
 {
 
 class RTTINode
@@ -143,4 +143,4 @@ Object* MakeObject(Args... args)
     return new Object(c, typeid(C), [c] { delete c; });
 }
 
-} // namespace cpp
+} // namespace cppd

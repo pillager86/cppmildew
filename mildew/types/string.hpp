@@ -13,31 +13,29 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#pragma once
+
+#include "../../cppd/utf8string.hpp"
 
 #include <string>
-#include <vector>
 
-#include "types/any.h"
+#include "object.hpp"
 
 namespace mildew
 {
-
-    class Interpreter
+    class ScriptString : public ScriptObject
     {
     public:
-        Interpreter() {}
-        Interpreter(const Interpreter& i) = delete;
-        ~Interpreter() {}
+        ScriptString();
+        ScriptString(const std::string& s);
 
-        ScriptAny Evaluate(const std::string& code, const std::string& name = "<program>");
-        bool HasErrors() const { return errors_.size() != 0; }
+        size_t GetHash() const override;
 
-        Interpreter& operator=(const Interpreter& i) = delete;
+        bool operator<(const ScriptString& s) const;
+        bool operator==(const ScriptString& s) const;
 
-        const std::vector<std::string>& errors() const { return errors_; }
-    private:
-        std::vector<std::string> errors_;
+        cppd::UTF8String str;
     };
 
-} // namespace mildew
+    std::ostream& operator<<(std::ostream& os, const ScriptString& s);
+
+}

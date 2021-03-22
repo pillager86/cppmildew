@@ -22,9 +22,9 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-#include "lexer.h"
-#include "nodes.h"
-#include "types/any.h"
+#include "lexer.hpp"
+#include "nodes.hpp"
+#include "types/any.hpp"
 
 namespace mildew
 {

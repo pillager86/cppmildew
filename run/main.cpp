@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include <iostream>
-#include "mildew/interpreter.h"
+#include "mildew/interpreter.hpp"
 
 /**
  * Implements a basic REPL that lists tokens of script input
@@ -29,6 +29,14 @@ int main()
         std::getline(std::cin, input);
         if(input == "" || input == "#exit")
             break;
+        while(input.length() > 0 && input[input.length() - 1] == '\\')
+        {
+            input.resize(input.length() - 1);
+            std::string line = "";
+            std::cout << ">>> ";
+            std::getline(std::cin, line);
+            input += '\n' + line;
+        }
         interpreter.Evaluate(input, "<repl>");
         if(interpreter.HasErrors())
         {
@@ -36,7 +44,7 @@ int main()
                 std::cerr << error << std::endl;
             continue;
         }
-        std::cout << "Successful tokenize" << std::endl;
+        std::cout << "Successful parse" << std::endl;
     }
     return 0;
 }

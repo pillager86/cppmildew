@@ -22,8 +22,8 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <vector>
 
-#include "lexer.h"
-#include "types/any.h"
+#include "lexer.hpp"
+#include "types/any.hpp"
 
 namespace mildew
 {
@@ -563,7 +563,7 @@ namespace mildew
         const std::shared_ptr<ExpressionNode> expression_node;
     };
 
-    class TryBlockStatementNode : StatementNode
+    class TryBlockStatementNode : public StatementNode
     {
     public:
         TryBlockStatementNode(const size_t line_no, const std::shared_ptr<StatementNode>& tryb, 

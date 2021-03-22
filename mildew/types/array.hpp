@@ -12,15 +12,31 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+*/
 #pragma once
-#include <type_traits>
 
-namespace cpp
+#include <ostream>
+
+#include "../../cppd/array.hpp"
+#include "any.hpp"
+#include "object.hpp"
+
+namespace mildew
 {
-    /**
-     * This helper template allows static_asserts to be used at the end of an if constexpr else chain
-     */
-    template<typename T>
-    struct dependent_false : std::false_type {};
+    class ScriptArray : public ScriptObject 
+    {
+    public:
+        ScriptArray(std::initializer_list<ScriptAny> list)
+        : ScriptObject("Array", nullptr), array(list) 
+        {}
+
+        size_t GetHash() const override;
+
+        bool operator<(const ScriptArray& other);
+        bool operator==(const ScriptArray& other);
+
+        cppd::Array<ScriptAny> array;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const ScriptArray& a);
 }

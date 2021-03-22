@@ -17,7 +17,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace cpp
+namespace cppd
 {
     std::string EncodeChar32(const char32_t dc);
 }

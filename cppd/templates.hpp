@@ -14,12 +14,13 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #pragma once
+#include <type_traits>
 
-#include <iostream>
-#include <string>
-#include "array.h"
-
-namespace cpp
+namespace cppd
 {
-    using UTF8String = Array<char>;
+    /**
+     * This helper template allows static_asserts to be used at the end of an if constexpr else chain
+     */
+    template<typename T>
+    struct dependent_false : std::false_type {};
 }

@@ -19,7 +19,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 #include <type_traits>
 
-namespace cpp
+namespace cppd
 {
 
 inline size_t NextPowerOf2(const size_t n)
@@ -57,13 +57,39 @@ public:
         static_assert(std::is_same_v<char, std::remove_cv_t<T>>);
         capacity_ = NextPowerOf2(str.size());
         Realloc(capacity_);
-        for(auto c : str)
-            Push(c);
+        for(size_t i = 0; i < str.length(); ++i)
+            ptr_.get()[i] = str[i];
+        length_ = str.length();
     }
 
     ~Array()
     {
         ptr_ = nullptr;
+    }
+
+    const T& At(size_t index) const 
+    {
+        return *(ptr_.get() + start_ + index);
+    }
+
+    T* begin()
+    {
+        return (ptr_.get() + start_);
+    }
+
+    T const* begin() const 
+    {
+        return (ptr_.get() + start_);
+    }
+
+    T* end()
+    {
+        return (ptr_.get() + start_ + length_);
+    }
+
+    T const* end() const 
+    {
+        return (ptr_.get() + start_ + length_);
     }
 
     Array<T> Slice(size_t begin, size_t end=-1)
@@ -75,11 +101,6 @@ public:
         newArray.is_slice_ = true;
         newArray.capacity_ = newArray.length_;
         return newArray;
-    }
-
-    const T& At(size_t index) const 
-    {
-        return *(ptr_.get() + start_ + index);
     }
 
     size_t Length() const
@@ -99,6 +120,34 @@ public:
             ptr_.get()[length_] = item;
         }
         ++length_;
+    }
+
+    bool operator<(const Array<T>& other) const
+    {
+        // TODO handle string ordering
+        if(Length() < other.Length())
+            return true;
+        else if(Length() > other.Length())
+            return false;
+        
+        for(size_t i = 0; i < Length(); ++i)
+        {
+            if(At(i) < other.At(i))
+                return true;
+        }
+        return false;
+    }
+
+    bool operator==(const Array<T>& other) const
+    {
+        if(Length() != other.Length())
+            return false;
+        for(size_t i = 0; i < Length(); ++i)
+        {
+            if(!(At(i) == other.At(i)))
+                return false;
+        }
+        return true;
     }
 
     T& operator[](size_t index)
@@ -130,7 +179,7 @@ private:
 };
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const cpp::Array<T>& array)
+std::ostream& operator<<(std::ostream& os, const Array<T>& array)
 {
     if constexpr(Array<T>::is_utf8string)
     {
@@ -151,4 +200,4 @@ std::ostream& operator<<(std::ostream& os, const cpp::Array<T>& array)
     return os;
 }
 
-} // namespace cpp
+} // namespace cppd

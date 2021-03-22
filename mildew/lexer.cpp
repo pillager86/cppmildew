@@ -13,12 +13,12 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "lexer.h"
+#include "lexer.hpp"
 
 #include <cctype>
 
-#include "../cpp/utf.h"
-#include "util/regex.h"
+#include "../cppd/utf.hpp"
+#include "util/regex.hpp"
 
 namespace mildew
 {
@@ -819,7 +819,7 @@ namespace mildew
                     --index_;
                     try 
                     {
-                        text += cpp::EncodeChar32(std::stoi(accum, nullptr, 16));
+                        text += cppd::EncodeChar32(std::stoi(accum, nullptr, 16));
                     }
                     catch(const std::exception&)
                     {

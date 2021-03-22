@@ -13,9 +13,9 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "object.h"
+#include "object.hpp"
 
-namespace cpp 
+namespace cppd
 {
 std::unordered_map<const std::type_info*, std::vector<RTTINode*>> Object::hierarchy_;
 
@@ -45,4 +45,4 @@ int Object::SearchTree(const std::type_info& derived_t, const std::type_info& ba
     return -1;
 }
 
-} // namespace cpp
+} // namespace cppd

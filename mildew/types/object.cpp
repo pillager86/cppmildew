@@ -13,13 +13,13 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "object.h"
+#include "object.hpp"
 
 #include <sstream>
 
 namespace mildew
 {
-    using cpp::Object;
+    using cppd::Object;
 
     ScriptObject::ScriptObject(const std::string& type, std::shared_ptr<ScriptObject> proto, Object* native)
     : name_(type), prototype_(proto), native_object_(native)

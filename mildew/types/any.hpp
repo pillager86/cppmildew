@@ -18,13 +18,18 @@ this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <memory>
 #include <ostream>
+#include <string>
 #include <type_traits>
 
-#include "../../cpp/templates.h"
+#include "../../cppd/templates.hpp"
+#include "../../cppd/utf8string.hpp"
 
 namespace mildew
 {
     class ScriptObject;
+    class ScriptArray;
+    class ScriptFunction;
+    class ScriptString;
 
     template<typename T>
     struct ConvertReturn
@@ -38,12 +43,31 @@ namespace mildew
         using type = std::shared_ptr<ScriptObject>;
     };
 
+    template<>
+    struct ConvertReturn<ScriptArray>
+    {
+        using type = std::shared_ptr<ScriptArray>;
+    };
+
+    template<>
+    struct ConvertReturn<ScriptFunction>
+    {
+        using type = std::shared_ptr<ScriptFunction>;
+    };
+
+    template<>
+    struct ConvertReturn<ScriptString>
+    {
+        using type = std::shared_ptr<ScriptString>;
+    };
+
     struct ScriptAny final
     {
-        enum class Type { UNDEFINED, NULL_, BOOLEAN, INTEGER, DOUBLE, OBJECT };
+        enum class Type { UNDEFINED, NULL_, BOOLEAN, INTEGER, DOUBLE, OBJECT, ARRAY, FUNCTION, STRING };
 
         ScriptAny() {}
         ScriptAny(const ScriptAny& );
+        ScriptAny(const std::string& str);
         ~ScriptAny();
 
         template<typename T>
@@ -61,6 +85,14 @@ namespace mildew
             SetValue(value);
             return *this;
         }
+
+        ScriptAny& operator=(const ScriptAny& value)
+        {
+            SetValue(value);
+            return *this;
+        }
+
+        ScriptAny& operator=(const std::string& str);
 
         Type type() const { return type_; }
 
@@ -81,8 +113,11 @@ namespace mildew
                 case Type::BOOLEAN: return as_boolean_;
                 case Type::INTEGER: return as_integer_ != 0;
                 case Type::DOUBLE: return as_double_ != 0.0;
-                // TODO helper functions for string and array and function
-                case Type::OBJECT: return as_object_.get() != nullptr;
+                case Type::OBJECT:
+                case Type::ARRAY:
+                case Type::FUNCTION:
+                case Type::STRING:
+                    return as_object_.get() != nullptr;
                 }
                 return static_cast<T>(false);
             }
@@ -94,7 +129,11 @@ namespace mildew
                 case Type::BOOLEAN: return static_cast<T>(as_boolean_);
                 case Type::INTEGER: return static_cast<T>(as_integer_);
                 case Type::DOUBLE: return static_cast<T>(as_double_);
-                case Type::OBJECT: return static_cast<T>(0);
+                case Type::OBJECT: 
+                case Type::ARRAY:
+                case Type::FUNCTION:
+                case Type::STRING:
+                    return static_cast<T>(0);
                 }
                 return static_cast<T>(0);
             }
@@ -103,18 +142,43 @@ namespace mildew
                 if(IsObject())
                     return as_object_;
                 else 
-                    return std::shared_ptr<ScriptObject>(nullptr);
+                    return std::shared_ptr<T>(nullptr);
+            }
+            else if constexpr(std::is_same_v<ScriptArray, std::remove_cv_t<T>>)
+            {
+                if(type_ == Type::ARRAY)
+                    return std::dynamic_pointer_cast<T>(as_object_);
+                else 
+                    return std::shared_ptr<T>(nullptr);
+            }
+            else if constexpr(std::is_same_v<ScriptFunction, std::remove_cv_t<T>>)
+            {
+                if(type_ == Type::FUNCTION)
+                    return std::dynamic_pointer_cast<T>(as_object_);
+                else 
+                    return std::shared_ptr<T>(nullptr);
+            }
+            else if constexpr(std::is_same_v<ScriptString, std::remove_cv_t<T>>)
+            {
+                if(type_ == Type::STRING)
+                    return std::dynamic_pointer_cast<T>(as_object_);
+                else 
+                    return std::shared_ptr<T>(nullptr);
             }
             else 
             {
-                static_assert(cpp::dependent_false<T>::value, "Unable to convert type");
+                static_assert(cppd::dependent_false<T>::value, "Unable to convert type");
             }
         }
 
+        std::string ToString() const;
+        cppd::UTF8String ToUTF8String() const;
+
     private:
+
         template<typename T>
         void SetValue(const T& value)
-        {
+        {   
             if constexpr(std::is_same_v<decltype(nullptr), std::remove_cv_t<T>>)
             {
                 DestructObject();
@@ -150,10 +214,58 @@ namespace mildew
                 }
                 type_ = Type::OBJECT;
             }
+            else if constexpr(std::is_same_v<std::shared_ptr<ScriptArray>, std::remove_cv_t<T>>)
+            {
+                if(IsObject())
+                    as_object_ = value;
+                else 
+                    new (&as_object_) std::shared_ptr<ScriptArray>(value);
+                type_ = Type::ARRAY;
+            }
+            else if constexpr(std::is_same_v<std::shared_ptr<ScriptFunction>, std::remove_cv_t<T>>)
+            {
+                if(IsObject())
+                    as_object_ = value;
+                else 
+                    new (&as_object_) std::shared_ptr<ScriptFunction>(value);
+                type_ = Type::FUNCTION;
+            }
+            else if constexpr(std::is_same_v<std::shared_ptr<ScriptString>, std::remove_cv_t<T>>)
+            {
+                if(IsObject())
+                    as_object_ = value;
+                else 
+                    new (&as_object_) std::shared_ptr<ScriptString>(value);
+                type_ = Type::STRING;
+            }
             else
             {
-                static_assert(cpp::dependent_false<T>::value, "Invalid type specified");
+                static_assert(cppd::dependent_false<T>::value, "Invalid type specified");
             }
+        }
+
+        void SetValue(const ScriptAny& value)
+        {
+            if(this == &value)
+                return;
+            switch(value.type_)
+            {
+            case Type::UNDEFINED: DestructObject(); break;
+            case Type::NULL_: DestructObject(); break;
+            case Type::BOOLEAN: DestructObject(); as_boolean_ = value.as_boolean_; break;
+            case Type::INTEGER: DestructObject(); as_integer_ = value.as_integer_; break;
+            case Type::DOUBLE: DestructObject(); as_double_ = value.as_double_; break;
+            case Type::OBJECT: 
+            case Type::ARRAY:
+            case Type::FUNCTION:
+            case Type::STRING:
+                if(IsObject())
+                    as_object_ = value.as_object_;
+                else 
+                    new (&as_object_) std::shared_ptr<ScriptObject>(value.as_object_);
+                break;
+            }
+            type_ = value.type_;
         }
 
         void DestructObject();

@@ -13,13 +13,13 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with 
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "interpreter.h"
+#include "interpreter.hpp"
 
 #include <iostream>
 
-#include "errors.h"
-#include "lexer.h"
-#include "parser.h"
+#include "errors.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 
 namespace mildew
 {
@@ -41,9 +41,9 @@ namespace mildew
         auto parser = Parser(tokens);
         try 
         {
-            auto expression = parser.ParseExpression();
-            std::cout << "Parsed expression success" << std::endl;
-            std::cout << expression->to_string() << std::endl;
+            auto program = parser.ParseProgram();
+            std::cout << "Parse program success" << std::endl;
+            std::cout << program->to_string() << std::endl;
         }
         catch(const ScriptCompileError& compile_error)
         {
